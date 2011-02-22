@@ -6,6 +6,7 @@ RushCheck library is a random test tool/library for ruby where
 almost features are imported from QuickCheck library in Haskell.
 QuickCheck has been developed by Koen Claessen and John Hughes in 2000.
   http://www.cs.chalmers.se/~rjmh/QuickCheck/
+  http://hackage.haskell.org/package/QuickCheck-1.2.0.1
 Because programs can be written functionally in ruby, like Haskell,
 the implementation of RushCheck is quite similar to QuickCheck.
 
