@@ -1,0 +1,31 @@
+= RushCheck library - a random test library for ruby
+  2006 Daisuke IKEGAMI <ikegami@madscientist.jp>
+  http://rushcheck.rubyforge.org/
+
+RushCheck library is a random test tool/library for ruby where
+almost features are imported from QuickCheck library in Haskell.
+QuickCheck has been developed by Koen Claessen and John Hughes in 2000.
+  http://www.cs.chalmers.se/~rjmh/QuickCheck/
+Because programs can be written functionally in ruby, like Haskell,
+the implementation of RushCheck is quite similar to QuickCheck.
+
+Check also directories data/rushcheck/doc and rdoc for details.
+
+= LICENSE
+This package has two different files for license issue.
+One is the Expat/MIT license and another is the LGPL license.
+
+RushCheck is distributed under the Expat/MIT license.
+
+The author wish that RushCheck should be distributed under the same
+license of QuickCheck, however I've never seen the license of
+QuickCheck. I choose the Expat/MIT license because the license
+Expat/MIT is similar to ghc's and is compatible with the GNU GPL.  
+I don't know whether the license of ghc is compatible or
+not. (possibly yes) 
+
+This package includes 'setup.rb' for installation. The setup.rb
+is distributed under LGPL. Because the RushCheck library does
+not use any output of setup.rb and not linked to setup.rb,
+the LGPL is applied to setup.rb only. (Let me know if I am
+misunderstanding about the license issue)

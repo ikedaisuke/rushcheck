@@ -1,0 +1,14 @@
+INSTALL
+
+  % ruby setup.rb
+
+see also
+  % ruby setup.rb --help
+
+Generating documents
+
+  % ruby setup.rb rdoc
+
+Testing RushCheck itself (expelimentally)
+
+  % ruby -I test -I lib setup.rb test

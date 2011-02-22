@@ -1,0 +1,7 @@
+Dear developers,
+
+1. see root/ship.sh what it does
+2. set version number at both Rakefile.in and
+   lib/rushcheck/version.rb.in
+3. then, run ship.sh
+4. rake for rdoc and gem

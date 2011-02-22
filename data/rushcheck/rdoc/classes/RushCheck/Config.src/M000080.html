@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>tests (RushCheck::Config)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File rushcheck/config.rb, line 69</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">tests</span>(<span class="ruby-identifier">gen</span>, <span class="ruby-identifier">rnd</span>, <span class="ruby-identifier">nt</span>=<span class="ruby-value">1</span>, <span class="ruby-identifier">nf</span>=<span class="ruby-value">0</span>, <span class="ruby-identifier">stamps</span>=[])
+      <span class="ruby-identifier">ntest</span>, <span class="ruby-identifier">nfail</span> = <span class="ruby-identifier">nt</span>, <span class="ruby-identifier">nf</span>
+      <span class="ruby-keyword kw">while</span> <span class="ruby-keyword kw">true</span>
+        <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">ntest</span> <span class="ruby-operator">&gt;</span> <span class="ruby-identifier">max_test</span>
+          <span class="ruby-identifier">done</span>(<span class="ruby-value str">'OK, passed'</span>, <span class="ruby-identifier">max_test</span>, <span class="ruby-identifier">stamps</span>)
+          <span class="ruby-identifier">tests_result</span> = <span class="ruby-keyword kw">true</span>
+          <span class="ruby-keyword kw">break</span>
+        <span class="ruby-keyword kw">end</span>
+        <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">nfail</span> <span class="ruby-operator">&gt;</span> <span class="ruby-identifier">max_fail</span>
+          <span class="ruby-identifier">done</span>(<span class="ruby-value str">'Arguments exhausted after '</span>, <span class="ruby-identifier">ntest</span>, <span class="ruby-identifier">stamps</span>)
+          <span class="ruby-identifier">tests_result</span> = <span class="ruby-keyword kw">nil</span>
+          <span class="ruby-keyword kw">break</span>
+        <span class="ruby-keyword kw">end</span>
+
+        <span class="ruby-identifier">rnd_l</span>, <span class="ruby-identifier">rnd_r</span> = <span class="ruby-identifier">rnd</span>.<span class="ruby-identifier">split</span>
+        <span class="ruby-identifier">result</span> = <span class="ruby-identifier">gen</span>.<span class="ruby-identifier">generate</span>(<span class="ruby-identifier">size</span>.<span class="ruby-identifier">call</span>(<span class="ruby-identifier">ntest</span>), <span class="ruby-identifier">rnd_r</span>)
+        <span class="ruby-identifier">message</span> = <span class="ruby-identifier">every</span>.<span class="ruby-identifier">call</span>(<span class="ruby-identifier">ntest</span>, <span class="ruby-identifier">result</span>.<span class="ruby-identifier">arguments</span>)
+        <span class="ruby-identifier">print</span> <span class="ruby-identifier">message</span> <span class="ruby-comment cmt"># don't puts</span>
+
+        <span class="ruby-keyword kw">case</span> <span class="ruby-identifier">result</span>.<span class="ruby-identifier">ok</span>
+        <span class="ruby-keyword kw">when</span> <span class="ruby-keyword kw">nil</span>
+          <span class="ruby-identifier">nfail</span> <span class="ruby-operator">+=</span> <span class="ruby-value">1</span>
+          <span class="ruby-keyword kw">redo</span>
+        <span class="ruby-keyword kw">when</span> <span class="ruby-keyword kw">true</span>
+          <span class="ruby-identifier">stamps</span>.<span class="ruby-identifier">push</span>(<span class="ruby-identifier">result</span>.<span class="ruby-identifier">stamp</span>)
+          <span class="ruby-identifier">ntest</span> <span class="ruby-operator">+=</span> <span class="ruby-value">1</span>
+          <span class="ruby-keyword kw">redo</span>
+        <span class="ruby-keyword kw">when</span> <span class="ruby-keyword kw">false</span>
+          <span class="ruby-identifier">error</span> = <span class="ruby-value str">&quot;Falsifiable, after &quot;</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">ntest</span>.<span class="ruby-identifier">to_s</span> <span class="ruby-operator">+</span> <span class="ruby-value str">&quot; tests:\n&quot;</span> <span class="ruby-operator">+</span> 
+            <span class="ruby-identifier">result</span>.<span class="ruby-identifier">arguments</span>.<span class="ruby-identifier">join</span>(<span class="ruby-value str">&quot;\n&quot;</span>)
+          <span class="ruby-identifier">puts</span> <span class="ruby-identifier">error</span>
+          <span class="ruby-identifier">tests_result</span> = <span class="ruby-keyword kw">false</span>
+          <span class="ruby-keyword kw">break</span>
+        <span class="ruby-keyword kw">else</span>
+          <span class="ruby-identifier">raise</span>(<span class="ruby-constant">RuntimeError</span>, <span class="ruby-value str">&quot;RushCheck: illegal result&quot;</span>)
+        <span class="ruby-keyword kw">end</span>
+      <span class="ruby-keyword kw">end</span>
+      
+      <span class="ruby-identifier">tests_result</span>
+    <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

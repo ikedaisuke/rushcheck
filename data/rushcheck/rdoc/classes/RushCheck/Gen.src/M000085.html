@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>create_by_gen (RushCheck::Gen)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File rushcheck/gen.rb, line 29</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">create_by_gen</span>(<span class="ruby-identifier">xs</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">f</span>)
+      <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">new</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">n</span>, <span class="ruby-identifier">r</span><span class="ruby-operator">|</span>
+        <span class="ruby-identifier">r2</span> = <span class="ruby-identifier">r</span>
+
+        <span class="ruby-identifier">try</span> = <span class="ruby-value">0</span>
+        <span class="ruby-keyword kw">begin</span>
+          <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">try</span> <span class="ruby-operator">&gt;</span> <span class="ruby-ivar">@@max_create</span> 
+            <span class="ruby-identifier">raise</span>(<span class="ruby-constant">RuntimeError</span>, <span class="ruby-value str">&quot;Failed to guards too many in the assertion.&quot;</span>) 
+          <span class="ruby-keyword kw">end</span>
+          <span class="ruby-identifier">args</span> = <span class="ruby-identifier">xs</span>.<span class="ruby-identifier">map</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">gen</span><span class="ruby-operator">|</span>
+            <span class="ruby-identifier">r1</span>, <span class="ruby-identifier">r2</span> = <span class="ruby-identifier">r2</span>.<span class="ruby-identifier">split</span>
+            <span class="ruby-identifier">gen</span>.<span class="ruby-identifier">value</span>(<span class="ruby-identifier">n</span>, <span class="ruby-identifier">r1</span>)
+          <span class="ruby-keyword kw">end</span>
+          <span class="ruby-identifier">f</span>.<span class="ruby-identifier">call</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">args</span>)
+        <span class="ruby-keyword kw">rescue</span> <span class="ruby-constant">Exception</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">ex</span>
+          <span class="ruby-keyword kw">case</span> <span class="ruby-identifier">ex</span>
+          <span class="ruby-keyword kw">when</span> <span class="ruby-constant">RushCheck</span><span class="ruby-operator">::</span><span class="ruby-constant">GuardException</span>
+            <span class="ruby-identifier">try</span> <span class="ruby-operator">+=</span> <span class="ruby-value">1</span>
+            <span class="ruby-keyword kw">retry</span>
+          <span class="ruby-keyword kw">else</span>
+            <span class="ruby-identifier">raise</span>(<span class="ruby-identifier">ex</span>, <span class="ruby-identifier">ex</span>.<span class="ruby-identifier">to_s</span>)
+          <span class="ruby-keyword kw">end</span>
+        <span class="ruby-keyword kw">end</span>
+      <span class="ruby-keyword kw">end</span>
+    <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

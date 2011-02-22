@@ -1,0 +1,908 @@
+<address>
+last-modified: 2006-10-13 Daisuke IKEGAMI <ikegami@madscientist.jp>
+</address>
+
+This tutorial is written in a simple markup language 
+"RedCloth3":http://whytheluckystiff.net/ruby/redcloth/.
+This file is also dawnloadable from "rushcheck.txt":rushcheck.txt
+and also in the distribution.
+
+h1. Index
+
+# <a href="#Getting start">Getting start</a>
+## <a href="#install by RubyGems">(Option 1.) install by RubyGems</a>
+## <a href="#using setup.rb after download source codes">(Option 2.) using setup.rb after download source codes</a>
+## <a href="#darcs repository">darcs repository</a>
+# <a href="#Tutorial for writing testcase">Tutorial for writing testcase</a>
+## <a href="#At first, we have to require the library.">At first, we have to require the library.</a>
+## <a href="#Start writing testcases">Start writing testcases</a>
+## <a href="#Watching the statistics">Watching the statistics</a>
+### <a href="#trivial">'trivial'</a>
+### <a href="#classify">'classify'</a>
+# <a href="#Combining unit testing and RushCheck">Combining unit testing and RushCheck</a>
+# <a href="#Combining RSpec and RushCheck">Combining RSpec and RushCheck</a>
+## <a href="#With another basic classes for assertions">With another basic classes for assertions</a>
+### <a href="#SpecialString">SpecialString</a>
+### <a href="#Array and RandomArray">Array and RandomArray</a>
+### <a href="#Hash and RandomHash">Hash and RandomHash</a>
+### <a href="#Proc and RandomProc">Proc and RandomProc</a>
+## <a href="#How to define random generators for user defined class">How to define random generators for user defined class</a>
+### <a href="#using Gen.create">using Gen.create</a>
+### <a href="#using Gen.bind and Gen.unit">using Gen.bind and Gen.unit</a>
+### <a href="#using Gen.new">using Gen.new</a>
+## <a href="#Another staffs in Gen class">Another staffs in Gen class</a>
+### <a href="#Gen.choose">Gen.choose</a>
+### <a href="#Gen.frequency">Gen.frequency</a>
+### <a href="#Gen.lift_array">Gen.lift_array</a>
+### <a href="#Gen.oneof">Gen.oneof</a>
+### <a href="#Gen.promote">Gen.promote</a>
+### <a href="#Gen.rand">Gen.rand</a>
+### <a href="#Gen.sized">Gen.sized</a>
+### <a href="#Gen.unit">Gen.unit</a>
+### <a href="#Gen.vector">Gen.vector</a>
+## <a href="#how to write random Proc which returns objects in YourClass">how to write random Proc which returns objects in YourClass</a>
+# <a href="#Further information">Further information</a>
+
+h1. <a name="Getting start">Getting start</a>
+
+There are two ways to install RushCheck.
+
+h2. <a name="install by RubyGems">(Option 1.) install by RubyGems</a>
+
+You can install RushCheck easily with 
+"rubygems":http://docs.rubygems.org/.
+
+<pre>% sudo gem install rushcheck</pre>
+
+Done!
+
+h2. <a name="using setup.rb after download source codes">(Option 2.) using setup.rb after download source codes.</a>
+
+Instead, if you don't have rubygems, or like to install from source
+codes, then you can follow the steps.
+
+# Get the tar-ball of current release from
+"download page":http://rubyforge.org/frs/?group_id=2027
+# Expand it
+# finally, type as follows
+
+<pre>% sudo ruby setup.rb</pre>
+
+See also the following;
+
+<pre>% setup.rb help</pre>
+
+h2. <a name="darcs repository">(Developer's another option)darcs repository</a>
+
+Our darcs repository is provided for developer RushCheck itself, and skip this
+section if you want to only use RushCheck!
+If you have an interest to our development version (not yet shipped), then try to access our darcs repository.
+darcs is a version control system and can be easily installed from
+"the darcs page":http://abridgegame.org/darcs/. After installing
+darcs, you can get the current development of RushCheck by following:
+
+<pre>
+% darcs get --partial http://rushcheck.rubyforge.org/repos/rushcheck
+</pre>
+
+After darcs getting, you can get the newest files whenever you want to
+type
+<pre>
+% darcs pull -a
+</pre>
+
+h1. <a name="Tutorial for writing testcase">Tutorial for writing testcase</a>
+
+h2. <a name="At first, we have to require the library.">At first, we have to require the library.</a>
+
+If you have installed RushCheck using RubyGems, then you should add
+the following two lines to your test codes.
+
+<pre>
+require 'rubygems'
+require_gem 'rushcheck'
+</pre>
+
+Otherwise, if you have installed RushCheck by setup.rb, then 
+add the simple one line.
+
+<pre>
+require 'rushcheck'
+</pre>
+
+The following maybe useful if you don't matter whether you use
+rubygems or not.
+<pre>
+begin
+  require 'rubygems'
+  require_gem 'rushcheck'
+rescue LoadError
+  require 'rushcheck'
+end
+</pre>
+
+h2. Don't forget to require also your library file if the class you want to test is included in it. 
+
+<pre>
+require 'your_library'
+</pre>
+
+h2. <a name="Start writing testcases">Start writing testcases</a>
+
+OK, then we can start to write test codes. RushCheck requires to
+write __assertion based__ testcases. An assertion of function (or
+method) consists of triple where inputs, guard conditions and a
+testing property block. Here is a templete of assertion: 
+
+<pre>
+RushCheck::Assertion.new(Class1, Class2, ...) do |var1, var2, ...|
+  # testing property block
+  # this block should return boolean value (true, false or nil)
+  # in Ruby
+end
+</pre>
+
+For example, assume that we want to test the method 'sort' in
+Array. The following assertion is a simple testcase:
+
+<pre>
+ast_zero = 
+  RushCheck::Assertion.new() do 
+    [].sort == []
+  end
+</pre>
+
+whether if we sort empty array the result is also empty.
+This assertion does not have any inputs and guards but only have
+the property block. 
+
+Let's see another example:
+<pre>
+ast_one = 
+  RushCheck::Assertion.new(Integer) do |x|
+    [x].sort == [x]
+  end
+</pre>
+
+This assertion defines that we claim for any integer 'x', an array
+[x] is not changed after sorting. We can test the property 100 times:
+
+<pre>
+irb> ast_one.verbose_check
+1:
+[-1]
+2:
+[-2]
+... (snip) ...
+99:
+[6]
+100:
+[1]
+OK, passed 100 tests.
+true
+irb> ast_one.check
+OK, passed 100 tests.
+true
+irb>
+</pre>
+
+RushCheck supports random testing such as above. We will see later
+how to change the number of test, how to change the distribution,
+etc. Here we learned two testing methods, verbose_check and check.
+'verbose_check' displays every instances of test, on the other hand
+'check' does not display inputs but only the result.
+
+Next example shows how RushCheck displays the counter example. If
+an assertion is failed, then there is a counter example of the
+assertion. 
+
+<pre>
+ast_two = 
+  RushCheck::Assertion.new(Integer, Integer) do |x, y|
+    [x, y].sort == [x, y]
+  end
+</pre>
+
+The above test is failed sometimes and we can find the result after
+checking.
+
+<pre>
+irb> ast_two.check
+Falsifiable, after 3 tests:
+[2, -1]
+false
+irb>
+</pre>
+
+Here, the counter example [2, -1] of the assertion is appeared. In
+fact, [2, -1].sort equals [-1, 2] and does not equal [2, -1]. 
+
+Sometimes, we need several pre-conditions for tests. For example,
+if we have a pre-condition 'x <= y' in the previous assertion, then
+the assertion should be succeeded. We can write pre-conditions as
+guards in the property block:
+
+<pre>
+ast_two_sorted =
+  RushCheck::Assertion.new(Integer, Integer) do |x, y|
+    RushCheck::guard { x <= y }
+    [x, y].sort == [x, y]
+  end
+</pre>
+<pre>
+irb> ast_two_sorted.check
+OK, passed 100 tests.
+true
+irb>
+</pre>
+
+Note that it is always assumed that the number of arguments of
+Assertion.new must be equal to the number of variables of the block. 
+(Until ver 0.3, experimentally the number of arguments can be 
+differed, however from ver 0.4, they must be equal.)
+The arguments of Assertion.new corresponds to the variables of block 
+one to one. We can have any number of guards in the property block. 
+If the guard property does not hold in random testing, then the test 
+is abort and try to take another random instances. We can imagine the 
+following test sequences in ast_two_sorted. 
+
+# x, y = 1, 2
+  -> guard g is passed
+  -> check the test block and succeed
+# x, y = 3, 1
+  -> guard g is failed and abort
+      (not counted)
+# x, y = 2, 3
+  -> ...
+# ... (whether passed 100 tests or not)
+
+h2. <a name="Watching the statistics">Watching the statistics</a>
+
+In the previous section, we saw two methods 'check' and
+'verbose_check'. Sometimes, we want to watch the statistics of
+random testing. However 'check' shows less information, and
+'verbose_check' is too noisy. RushCheck has several options to
+watch the statistics.
+
+h3. <a name="trivial">'trivial'</a>
+
+You may not want to check the trivial case in random test. As we
+have seen, we can ignore the trivial case using the guard
+condition. However, on the other hand, we can watch how many
+trivial cases are appeared in random test.
+
+<pre>
+ast_sort_triv =
+  RushCheck::Assertion.new(Integer, Integer) do |x, y|
+    RushCheck::guard {x <= y}
+    ([x, y].sort == [x, y]).trivial{ x == y }
+  end
+</pre>
+<pre>
+irb> ast_sort_triv.check
+OK, passed 100 tests(14%, trivial).
+true
+</pre>
+
+Here, we have 14% (i.e. 14 times) trivial (x == y) cases in the
+test.
+
+h3. <a name="classify">'classify'</a>
+
+In addition, we can give another names to watching statistics.
+
+<pre>
+ast_sort_classify =
+  RushCheck::Assertion.new(Integer, Integer) do |x, y|
+    RushCheck::guard {x <= y}
+    test = ([x, y].sort == [x, y])
+    test.classify('same'){ x == y }.
+      classify('bit diff'){ (x - y).abs == 1 } 
+  end
+</pre>
+<pre>
+irb> ast_sort_classify.check
+OK, passed 100 tests.
+18%, same.
+11%, bit diff.
+true
+irb>
+</pre>
+
+h2. <a name="Combining unit testing and RushCheck">Combining unit testing and RushCheck</a>
+
+The library 'test/unit' of Ruby is useful for unit testing. Here is a trick to use 'test/unit'.
+
+<pre>
+  def forall(*cs, &f)
+    assert(RushCheck::Claim.new(*cs, &f).check)
+  end
+</pre>
+
+The class Claim is a subclass of Assertion. The meaning is almost similar to Assertion, however
+Claim does not check the result value of the given block 'f'. Because assertions in 'test/unit'
+such as 'assert_equal' does not return any result, but return nil, we don't need to check the
+result values of a sequence of assertions. Nevertheless we can check the testcase because
+the assertions in 'test/unit' raises an exception if the testcase is failed.
+
+Example:
+<pre>
+  def test_not_empty_after_push
+    array = Array.new
+    forall(Integer) do |item|
+      array.push item
+      assert(! array.empty?)
+    end
+  end
+</pre>
+
+h2. <a name="Combining RSpec and RushCheck">Combining RSpec and RushCheck</a>
+
+"RSpec":http://rspec.rubyforge.org is another testing framework which helps Behaviour Driven Development (BDD).
+To combine RSpec and RushCheck, the following trick maybe useful and easy to read:
+<pre>
+  def forall(*cs, &f)
+    RushCheck::Claim.new(*cs, &f).check.should_equal true
+  end
+</pre>
+
+Then, for example, we can write a specification of Array#push as follows:
+<pre>
+context "An empty array" do
+
+  specify "should not be empty after 'push'" do
+    forall(Integer) do |item|
+      array = Array.new
+      array.push item
+      array.should_not_be_empty
+    end
+  end
+
+end
+</pre>
+
+See also 'examples/rspec' in the distribution of RushCheck for details.
+
+h2. <a name="With another basic classes for assertions">With another basic classes for assertions</a>
+
+In previous sections, we have seen how to check assertions for any
+integers. In similar way, we can define the assertions for any float
+numbers or any string. 
+
+<pre>
+RushCheck::Assertion.new(Float, String, ...) do |ratio, name,...|
+  # testcase
+end
+</pre>
+
+RushCheck has default random generators for the following basic classes:
+
+* Integer
+* Float
+* String
+
+If you want to change the distribution of randomness, then you have
+to write a code for generator. There are some examples for writing
+generators. In the next section, I will introduce SpecialString
+whose distribution differs to the default implementation of String.
+
+Even Array, Hash and Proc are also primitive classes, however the
+randomness of them should be changed in testing codes. Therefore,
+RushCheck provides an abstract generators for them. Programmer need
+to write a subclass of the abstract generators. Later
+I will show you how to write a subclass of RandomArray, etc.
+
+h3. <a name="SpecialString">SpecialString</a>
+
+Sometimes, we want to check special characters, for example the
+backslash '\' or unprinted characters 'ESC', 'NUL' and so on.
+SpecialString is a subclass of String which is defined in
+'rushcheck/string'. This library is already required in
+'rushcheck/rushcheck' and don't need to require again.
+
+The output of random generator of SpecialString has different
+distribution of its of String. At String, the distribution of
+characters are normalized. On the other hand, the distribution in
+SpecialString is weighted and the generator provides special
+characters more often than alphabets. In detail, the distribution is
+as follows:
+
+|_.the distribution of SpecialString |
+|Alphabet          |15%              |
+|Control characters|50% (such as NUL)|
+|Number            |10%              |
+|Special characters|25% (such as '\')|
+
+Using SpecialString in assertions, it is more likely to find the
+counter example. The following example is the famous bug which is
+called 'malformed format bug'.
+
+<pre>
+malformed_format_string =
+  RushCheck::Assertion.new(String) { |s| sprintf(s); true}
+
+malformed_format_string2 =
+  RushCheck::Assertion.new(SpecialString) { |s| sprintf(s); true}
+</pre>
+<pre>
+irb> malformed_format_string.check
+Falsifiable, after 86 tests:
+Unexpected exception: #<ArgumentError: malformed format string - %&>
+    ... snip error traces ...
+["\n&'e!]hr(%&\031Vi\003 }ss"]
+false
+irb> malformed_format_string2.check
+Falsifiable, after 15 tests:
+Unexpected exception: #<ArgumentError: malformed format string>
+["%\037-R"]
+false
+</pre> 
+
+In these results, we can see RushCheck find the counter example
+after 86 tests with String, on the other hand, find it quickly after 15
+tests with SpecialString.
+
+It is easy to change the distribution in SpecialString. You can
+define your subclass of SpecialString as follows:
+
+<pre>
+class YourSpecialString < SpecialString
+  @@frequency = { 'alphabet' => 1,
+                  'control'  => 0,
+                  'number'   => 0,
+                  'special'  => 9 }  
+end
+</pre>
+
+h3. <a name="Array and RandomArray">Array and RandomArray</a>
+
+The meaning of randomness for Array must be changed in testing
+codes. Sometimes you needs a random array of Integer, and another a
+random array of String. So what is random array?
+
+RushCheck provides an abstract class RandomArray for abstract random
+generator. Programmer have to write a subclass of RandomArray as
+follows:
+
+<pre>
+# for random array of integers
+class MyRandomArray < RandomArray; end
+MyRandomArray.set_pattern(Integer) {|ary, i| Integer}
+</pre>
+
+The class method set_pattern takes a variable and a block.
+Because array is __inductive__ structure, it can be defined by the
+basecase and the inductive step.
+
+For example, let's consider a random array in the following pattern
+@[Integer, String, Integer, String, ...]@
+where it has a random Integer at the odd index and a random String at 
+the even index. Then we can write a random array with this pattern:
+
+<pre>
+MyRandomArray.set_pattern(Integer) do |ary, i|
+  if i % 2 == 0
+  then Integer
+  else String
+  end
+end
+</pre>
+
+More complecated example? OK, let's consider a stream:
+* the first component is Integer
+* if the i-th component is positive integer 
+** then (i+1)-th component is String
+** otherwise the (i+1)-th component is Integer
+
+<pre>
+MyRandomArray.set_pattern(Integer) do |ary, i|
+  if ary[i].kind_of?(Integer) && ary[i] >= 0
+  then String
+  else Integer
+  end
+end 
+</pre>
+
+In this way, we can define any random array with any pattern.
+
+h3. <a name="Hash and RandomHash">Hash and RandomHash</a>
+
+Hash is also primitive and not so clear what is a random hash, like
+array. RushCheck provides an abstract random generator RandomHash,
+and programmer can write a subclass of RandomHash.
+
+<pre>
+class MyRandomHash < RandomHash; end
+pat = { 'key1' => Integer, 'key2' => String }
+MyRandomHash.set_pattern(pat)
+</pre>
+
+In this example, we can get a random Hash with two keys ('key1' and
+'key2'). Here the keys are String, but we can give any object as
+usual in Hash. Is it clear to define random hash? I think so.
+(If not it is clear, then the interface may be changed in future)
+
+h3. <a name="Proc and RandomProc">Proc and RandomProc</a>
+
+It is not difficult to create a random Proc object.
+As we saw in the previous sections, we have to write a subclass of
+RandomProc.
+
+<pre>
+class MyRandomProc < RandomProc; end
+MyRandomProc.set_pattern([Integer], [Integer])
+</pre>
+
+Here, we define a random procedure which takes an integer and
+returns an integer also. In general, Ruby's function and method can
+be regarded as a relation. (not a function in mathematics!)
+Therefore I think random procedures can be generated by a pair of
+inputs and outputs.
+
+Let's consider a simple example. In general, any functions f, g, and
+h should satisfy the associativity property:
+<pre>
+  for all x, f(g(h(x)) === (f . g)(h (x))
+     where f . g is a composition of functions in mathematical way
+</pre>
+
+<pre>
+class Proc
+  # application
+  def **(other)
+    Proc.new do |*args|
+      res = other.call(*args)
+      call(*res)
+    end
+  end
+end
+
+class MyRandomProc < RandomProc; end
+
+def associativity_integer
+  MyRandomProc.set_pattern([Integer], [Integer])
+  RushCheck::Assertion.new(MyRandomProc, MyRandomProc, 
+                           MyRandomProc, Integer) do
+    |f, g, h, x|
+    (f ** (g ** h)).call(x) == ((f ** g) ** h).call(x)
+  end.check
+end
+</pre>
+
+P.S.  
+The arbitrary method is used to create a random object for test
+instance. Then you may wonder what is the coarbitrary method?
+The coarbitrary method is used to generate a random procedure
+(lambda), which is one of central idea in QuickCheck.
+
+h2. <a name="How to define random generators for user defined class">How to define random generators for user defined class</a>
+
+h3. Understand your class. What is a random object?
+
+To use your class in the assertion, like follows
+<pre>
+RushCheck::Assertion.new(YourClass) { |obj, ...| ...}
+</pre>
+you have to write a code which generates a random object in your
+class. Therefore, at first we have to consider
+__what is a random object in YourClass?__
+
+Sometimes the answer is not unique; there may be several ways for
+generating random objects. Like SpecialString in RushCheck, you can
+also write an abstract random generator.
+
+OK, after thinking about the question, we have to write a code.
+To define random generators, we have to add a class method arbitrary
+in YourClass.
+
+<pre>
+class YourClass
+  extend RushCheck::Arbitrary
+
+  def self.arbitrary
+    # override the class method arbitrary 
+    ...
+  end
+end
+</pre>
+
+If you need to define a random proc which returns a object in
+YourClass, you have to include Coarbitrary, also.
+
+<pre>
+class YourClass
+  extend RushCheck::Arbitrary
+  include RushCheck::Coarbitrary
+
+  def self.arbitrary
+    ...
+  end
+
+  def coarbitrary(g)
+    ...
+  end
+end
+</pre>
+
+However, because it is little complecated to implement both
+arbitrary and coarbitrary, let's focus how to implement arbitrary
+first.
+
+Let's consider the first example Candy. The Candy class requires its
+name and its price at initialize. The name should be a String, and the
+price Integer. The Candy class may have several instance methods, but
+they are omitted because not important to define the random object.
+
+<pre>
+class Candy
+
+  def initialize(name, price)
+    raise unless price >= 0
+    @name, @price = name, price
+  end
+
+  def foo
+    ...
+  end
+
+  def bar
+    ...
+  end
+
+end
+</pre>
+
+To write random generator, we have to look up 'initialize'.
+Here, assume that @name belongs String and @price belongs Integer.
+It is natural that we assumes @price should be positive.
+
+One simple random generator for Candy:
+
+h3. <a name="using Gen.create">(1) using Gen.create</a>
+
+<pre>
+class Candy
+  extend RushCheck::Arbitrary
+
+  def self.arbitrary
+    RushCheck::Gen.create(String, Integer) do |name, price|
+      RushCheck::guard { price >= 0 }
+      new(name, price)
+    end
+  end
+end
+</pre>
+
+Gen.create takes an array of Gen object (here, [Integer.arbitrary,
+String.arbitrary]) and a block. The block takes variables which is
+corresponded to the array, as Assertion.new. If guard is failed,
+then RushCheck retry to create another random instance. 
+
+Note that we can use a trick instead of the guard property.
+<pre>
+  price = - price if price < 0   # g.guard { price >= 0 }
+</pre>
+In this case, this is more efficient to generate random instance
+than with the guard. However, sometimes we don't have this kind
+trick and we can use some guards.
+
+Remark: from version 0.4, Gen.create is changed to require classes 
+in its argument from Gen objects. 
+
+h3. <a name="using Gen.bind and Gen.unit">(2) using Gen#bind and Gen.unit</a>
+
+<pre>
+class Candy
+  extend RushCheck::Arbitrary
+
+  def self.arbitrary
+    String.arbitrary.bind do |name|
+      Integer.arbitrary.bind do |price|
+        price = - price if price < 0   # trick as I described above
+        RushCheck::Gen.unit(new(name, price))
+      end
+    end
+  end
+end
+</pre>
+
+Puzzled? OK, they can be readed as follows:
+
+* take a random (arbitrary) string and call it 'name'
+** take a random integer and call it 'price'
+*** return a Gen object which has a new Candy(name, price)
+
+In general, the class method arbitrary should return a Gen object.
+Check also gen.rb in RushCheck. There are several combinators to
+create random generators.
+
+There are several way to implement random generators. The next
+example is to use Gen.new without bind and unit.
+
+h3. <a name="using Gen.new">(3) using Gen.new</a>
+
+<pre>
+class Candy
+  extend RushCheck::Arbitrary
+
+  def self.arbitrary
+    RushCheck::Gen.new do |n, r|
+      r2 = r
+      name, price = [String, Integer].map do |c|
+        r1, r2 = r2.split
+        c.arbitrary.value(n. r1)
+      end
+    price = - price if price < 0 # trick
+      new(name, price)
+    end
+  end
+end
+</pre>
+
+This pattern is useful if your class has many valiables for
+initialize. Because binding patterns needs much depth of method call
+chains, it may be failed. This technique is used to avoid the stack
+overflow. This is one difference between Haskell and Ruby.
+
+The implementation can be understanded as follows:
+* self.arbitrary returns a new Gen object.
+** let n be an integer and r be a random generator.
+** let r2 equal r
+** name and price are both random objects where
+*** get new two random generator r1 and r2 from old r2
+*** assign a random value by generating 'arbitrary.value(n, r1)'
+**** and discard the random generator r1 
+**** ...
+
+Note that we need new random generator for each random object.
+Here we create new random generator by spliting. If you use same
+random generator for generating different objects, then the
+distribution of objects are same (not generated randomly).
+
+Because sometimes the initialize of YourClass is complecated,
+then the random generator self.arbitrary turns to be complicated
+also.
+
+In next sections, I will introduce several generators in gen.rb.
+They may be useful to create your own random genrator. See also rdoc
+of Gen.
+
+h3. Appendix: expensive candy.
+
+Using Gen.create to generate random instance, if we gives another
+guard such as   
+<pre>
+    RushCheck::guard { price >= 100000 }  # very expensive candy!
+</pre>
+then it consumes much time to generate random instance because the
+guard fails so many times. When RushCheck creates random instances,
+it starts smallest as   possible, then the size becomes larger in
+repeating tests. Therefore, if the guard instance seems failed so
+often, then we need another seeds of generators. Here is another
+generators for expensive candy instance.
+
+<pre>
+lo = 100000
+g = RushCheck::Gen.sized { |n| RushCheck::Gen.choose(lo, n + lo)}
+xs = [String.arbitrary, g]
+</pre>
+See gen.rb and the following sections in details for how to get
+another generator. 
+
+h2. <a name="Another staffs in Gen class">Another staffs in Gen class</a>
+
+To help defining random objects in your class, there are several
+functions in Gen class.
+
+h3. <a name="Gen.choose">Gen.choose</a>
+
+Gen.choose(lo, hi) returns a Gen object which generates a random
+value in the bound.
+
+example.  
+<pre>
+Gen.choose(0, 10) # a generator of Integer in (0..10)
+</pre>
+
+h3. <a name="Gen.frequency">Gen.frequency</a>
+
+Gen.frequency requires an array of pair of Integer and Gen objects,
+and returns a Gen object. Gen.frequency is used to define the
+distribution of randomness.
+
+example.
+<pre>
+Gen.frequency([[3, Integer.arbitrary], [7, String.arbitrary]])
+   # return a random integer or a random string (by choosing
+   # randomly) Integer:30% String: 70%
+</pre> 
+
+See also SpecialString.
+
+h3. <a name="Gen.lift_array">Gen.lift_array</a>
+
+Gen.lift_array takes an array and a block which has a variable.
+The block should return a Gen object. lift_array returns a Gen
+object which generates an array of the result of given block for
+applying each member of given array.
+
+example. 
+
+<pre>
+class Candy
+  extend RushCheck::Arbitrary
+
+  def self.arbitrary
+    RushCheck::Gen.lift_array([Integer, String]) do |c| 
+      c.arbitrary
+    end.bind do |args|
+      new(*args)
+    end
+  end
+end
+</pre>
+
+h3. <a name="Gen.oneof">Gen.oneof</a>
+
+Gen.oneof requires an array of Gen objects returns a Gen object.
+
+example.
+<pre>
+Gen.oneof([Integer.arbitrary, String.arbitrary])
+  # return a random integer or a random string (by choosing
+  # randomly)
+</pre>
+
+h3. <a name="Gen.promote">Gen.promote</a>
+
+Gen.promote is used to generate a random Proc object.
+Next section I will describe how to define the random Proc object.
+See also proc.rb in the example directory of RushCheck.
+
+h3. <a name="Gen.rand">Gen.rand</a>
+
+Gen.rand is a random number generator.
+
+h3. <a name="Gen.sized">Gen.sized</a>
+
+Gen.sized is used to change the size of random object.
+See also some implementation in RushCheck (grep the source!)
+
+h3. <a name="Gen.unit">Gen.unit</a>
+
+return Gen object.
+
+h3. <a name="Gen.vector">Gen.vector</a>
+
+Get a vector of Gen.
+
+example.
+<pre>
+Gen.vector(Integer, 3) # => Gen [Integer, Integer, Integer]
+</pre>
+
+h2. <a name="how to write random Proc which returns objects in YourClass">how to write random Proc which returns objects in YourClass</a>
+
+It is complecated, and see some examples.
+* rushcheck/bool.rb
+* rushcheck/integer.rb
+* rushcheck/string.rb
+
+so on, grep 'coarbitrary'
+
+FIXME: how to write coarbitrary
+
+h1. <a name="Further information">Further information</a>
+
+Webpage should have another useful information:
+* "RushCheck Homepage http://rushcheck.rubyforge.org/":http://rushcheck.rubyforge.org/
+
+The project page has a bug tracker and webboard.
+* "RushCheck at Rubyforge http://rubyforge.org/projects/rushcheck/":http://rubyforge.org/projects/rushcheck/
+ 
+There is no mailing list for RushCheck (now at 2006-08-08),
+but don't hesitate to contact to the author!
+
+Happy hacking and testing!
+
+

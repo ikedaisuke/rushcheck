@@ -1,0 +1,45 @@
+2006-11-29 start
+
+files
+-----
+rushcheck.rb
+rushcheck/arbitrary.rb	rushcheck/claim.rb   rushcheck/guard.rb    rushcheck/property.rb  rushcheck/testable.rb
+rushcheck/array.rb	rushcheck/config.rb  rushcheck/hash.rb	   rushcheck/random.rb	  rushcheck/testoptions.rb
+rushcheck/assertion.rb	rushcheck/float.rb   rushcheck/integer.rb  rushcheck/result.rb	  rushcheck/testresult.rb
+rushcheck/bool.rb	rushcheck/gen.rb     rushcheck/proc.rb	   rushcheck/string.rb	  rushcheck/version.rb
+
+21 files
+
+categories
+----------
+- prelude
+  | rushcheck.rb
+- version
+  | version.rb
+- arbitrary for base classes
+  | array.rb
+  | bool.rb
+  | float.rb
+  | hash.rb
+  | integer.rb
+  | proc.rb
+  | string.rb
+- random number generators
+  | random.rb
+- interfaces
+  | assertion.rb
+  | claim.rb
+  | guard.rb
+- internal preliminaries
+  | arbitrary.rb
+  | config.rb
+  | gen.rb
+  | property.rb
+  | result.rb
+  | testable.rb
+  | testoptions.rb
+  | testresult.rb
+
+specification
+-------------
+

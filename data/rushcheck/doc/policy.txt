@@ -1,0 +1,627 @@
+2006-07-26 start	Daisuke IKEGAMI <ikegami@madscientist.jp>
+2006-08-09 add
+
+porting policy
+--------------
+
+In this document, I compare between the original Haskell
+implementation in ghc and RushCheck.
+
+1. Haskell98 System.Random
+
+1.1 type, type classes and functions in System.Random
+
+class RandomGen g where
+  next     :: g -> (Int, g)
+  split    :: g -> (g, g)
+  genRange :: g -> (Int, Int)
+
+data StdGen = StdGen Int Int
+instance RandomGen StdGen
+instance Show      StdGen
+instance Read      StdGen
+
+mkStdGen :: Int -> StdGen
+
+class Random a where
+  random    :: RandomGen g => g -> (a, g)
+  randomR   :: RandomGen g => (a, a) -> g -> (a, g)
+  randoms   :: RandomGen g => g -> [a]
+  randomRs  :: RandomGen g => (a, a) -> g -> [a]
+  randomIO  :: IO a
+  randomRIO :: (a, a) -> IO a
+instance Random Int
+instance Random Char
+instance Random Bool
+instance Random Integer
+instance Random Double
+instance Random Float
+
+getStdRandom :: (StdGen -> (a, StdGen)) -> IO a
+getStdGen    :: IO StdGen
+setStdGen    :: StdGen -> IO ()
+newStdGen    :: IO StdGen
+
+1.2 porting policy for System.Random in Haskell to Ruby
+
+Haskell              ruby
+System.Random   ---> rushcheck/random.rb
+
+Haskell              ruby
+class RandomGen ---> module RandomGen
+                       for instance methods
+
+'method RandomGen' is assumed to be included for making instance
+methods.
+
+  Haskell
+  next     :: g -> (Int, g)
+  split    :: g -> (g, g)
+  genRange :: g -> (Int, Int)
+  --->
+  Ruby
+  RandomGen#gen_next  :: [Fixnum, SELF]
+  RandomGen#split     :: [SELF, SELF]
+  RandomGen#gen_range :: [Fixnum, Int]
+  
+- because 'next' is a reserved word of ruby, change it to 'gen_next'.
+- SELF is the class which includes the module RandomGen.
+- Haskell's Int is similar to Ruby's Fixnum
+
+  Haskell
+  data StdGen = StdGen Int Int
+  instance RandomGen StdGen
+  instance Show      StdGen
+  instance Read      StdGen
+  mkStdGen :: Int -> StdGen
+  --->
+  Ruby
+  class StdGen
+  StdGen#initialize(left::Fixnum=nil, right::Fixnum = nil)
+  StdGen includes module RandomGen
+  StdGen#to_s
+
+- read is not implemented yet (maybe unnecessary?)
+- StdGen requires two integers in default, but we can also create
+  StdGen with only one integer by mkStdGen. Therefore,
+  StdGen#initialize takes one/two integers. In addition, we can make
+  StdGen without any integers but they are generated randomly.
+
+  Haskell
+  class Random a where
+  random    :: RandomGen g => g -> (a, g)
+  randomR   :: RandomGen g => (a, a) -> g -> (a, g)
+  randoms   :: RandomGen g => g -> [a]
+  randomRs  :: RandomGen g => (a, a) -> g -> [a]
+  randomIO  :: IO a
+  randomRIO :: (a, a) -> IO a
+  --->
+  Ruby
+  module HsRandom
+  HsRandom#random
+    (gen::RandomGen, lo::HsRandom=nil, hi::HsRandom=nil)
+    :: [HsRandom, RandomGen] 
+  HsRandom#random_array
+    (gen::RandomGen, len::Integer=nil, 
+     lo::HsRandom=nil, hi::HsRandom=nil)
+    :: [HsRandom, RandomGen] 
+  HsRandom#random_std(lo::HsRandom=nil, hi::HsRandom=nil)
+  private
+  HsRandom#random_range
+    (gen::RandomGen, lo::HsRandom=nil, hi::HsRandom=nil)
+    :: [HsRandom, RandomGen] 
+
+  Haskell
+  instance Random Int
+  instance Random Integer
+  --->
+  Ruby
+  class Integer includes the module HsRandom
+    why not Fixnum and Bignum?
+
+  Haskell
+  instance Random Char
+  -->
+  Ruby
+  class String includes the module HsRandom
+
+  Haskell
+  instance Random Double
+  instance Random Float
+  -->
+  Ruby
+  class Float includes the module HsRandom
+
+  Haskell
+  instance Random Bool
+  -->
+  Ruby
+  nop
+    why not TrueClass and FalseClass?
+      but what is the randomness of TrueClass?
+
+  Haskell
+  getStdRandom :: (StdGen -> (a, StdGen)) -> IO a
+  -->
+  Ruby
+  nop
+
+  Haskell
+  newStdGen    :: IO StdGen
+  setStdGen    :: StdGen -> IO ()
+  getStdGen    :: IO StdGen
+  -->
+  Ruby
+  class TheStdGen (singleton class)
+
+2.1 Test.QuickCheck
+
+  quickCheck    :: Testable a => a -> IO () -- :: prop -> IO ()
+  verboseCheck  :: Testable a => a -> IO () -- :: prop -> IO ()
+  test          :: Testable a => a -> IO () -- :: prop -> IO ()
+  
+  Config(..)    -- :: *
+  data Config = Config
+    { configMaxTest :: Int
+    , configMaxFail :: Int
+    , configSize    :: Int -> Int
+    , configEvery   :: Int -> [String] -> String
+    }
+  defaultConfig :: Config
+  check         :: Testable a => Config -> a -> IO () 
+                   -- :: Config -> prop -> IO ()
+ 
+  -- property combinators
+  forAll        :: (Show a, Testable b) => Gen a -> (a -> b) ->
+                   Property
+                -- :: Gen a -> (a -> prop) -> prop
+  (==>)         :: Testable a => Bool -> a -> Property
+                -- :: Bool -> prop -> prop
+  
+  -- gathering test-case information
+  label         :: Testable a => String -> a -> Property
+                -- :: String         -> prop -> prop
+  collect       :: (Show a, Testable b) => a -> b -> Property
+                -- :: Show a => a    -> prop -> prop
+  classify      :: Testable a => Bool -> String -> a -> Property
+                -- :: Bool -> String -> prop -> prop
+  trivial       :: Testable a => Bool -> a -> Property
+                -- :: Bool           -> prop -> prop
+  
+  -- generator combinators
+  Gen           -- :: * -> * ; Functor, Monad
+  newtype Gen a
+    = Gen (Int -> StdGen -> a)
+  
+  elements      :: [a] -> Gen a
+  two           :: Gen a -> Gen (a,a)
+  three         :: Gen a -> Gen (a,a,a)
+  four          :: Gen a -> Gen (a,a,a,a)
+  
+  sized         :: (Int -> Gen a) -> Gen a
+  resize        :: Int -> Gen a -> Gen a
+  choose        :: Random a => (a, a) -> Gen a
+  oneof         :: [Gen a] -> Gen a
+  frequency     :: [(Int, Gen a)] -> Gen a
+  
+  vector        :: Arbitrary a => Int -> Gen [a]
+
+  -- default generators
+  Arbitrary(..) -- :: class
+  class Arbitrary a where
+    arbitrary   :: Gen a
+    coarbitrary :: a -> Gen b -> Gen b
+  rand          :: Gen StdGen
+  promote       :: (a -> Gen b) -> Gen (a -> b)
+  variant       :: Int -> Gen a -> Gen a
+
+  -- testable
+  Testable(..)  -- :: class
+  class Testable a where
+    property :: a -> Property
+  Property      -- :: *
+  newtype Property
+    = Prop (Gen Result)
+
+  -- For writing your own driver
+  Result(..)	 -- :: data
+  data Result
+    = Result { ok :: Maybe Bool, 
+               stamp :: [String], 
+               arguments :: [String] } 
+  generate     :: Int -> StdGen -> Gen a -> a
+  evaluate     :: Testable a => a -> Gen Result
+
+2.2 porting policy for QuickCheck in Haskell to Ruby
+
+Because Test.QuickCheck is not small, I decide to divide
+implementation into several files.
+
+  = testable.rb
+  quickCheck    :: Testable a => a -> IO () -- :: prop -> IO ()
+  verboseCheck  :: Testable a => a -> IO () -- :: prop -> IO ()
+  test          :: Testable a => a -> IO () -- :: prop -> IO ()
+  check         :: Testable a => Config -> a -> IO () 
+                   -- :: Config -> prop -> IO ()
+  (==>)         :: Testable a => Bool -> a -> Property
+                -- :: Bool -> prop -> prop
+  -- gathering test-case information
+  label         :: Testable a => String -> a -> Property
+                -- :: String         -> prop -> prop
+  collect       :: (Show a, Testable b) => a -> b -> Property
+                -- :: Show a => a    -> prop -> prop
+  classify      :: Testable a => Bool -> String -> a -> Property
+                -- :: Bool -> String -> prop -> prop
+  trivial       :: Testable a => Bool -> a -> Property
+                -- :: Bool           -> prop -> prop
+  -- testable
+  Testable(..)  -- :: class
+  class Testable a where
+    property :: a -> Property
+
+  evaluate     :: Testable a => a -> Gen Result
+
+  = config.rb
+  Config(..)    -- :: *
+  data Config = Config
+    { configMaxTest :: Int
+    , configMaxFail :: Int
+    , configSize    :: Int -> Int
+    , configEvery   :: Int -> [String] -> String
+    }
+  defaultConfig :: Config
+ 
+  = gen.rb
+  -- property combinators
+  forAll        :: (Show a, Testable b) => Gen a -> (a -> b) ->
+                   Property
+                -- :: Gen a -> (a -> prop) -> prop
+  -- generator combinators
+  Gen           -- :: * -> * ; Functor, Monad
+  newtype Gen a
+    = Gen (Int -> StdGen -> a)
+  elements      :: [a] -> Gen a
+  two           :: Gen a -> Gen (a,a)
+  three         :: Gen a -> Gen (a,a,a)
+  four          :: Gen a -> Gen (a,a,a,a)
+  
+  sized         :: (Int -> Gen a) -> Gen a
+  resize        :: Int -> Gen a -> Gen a
+  choose        :: Random a => (a, a) -> Gen a
+  oneof         :: [Gen a] -> Gen a
+  frequency     :: [(Int, Gen a)] -> Gen a
+  
+  vector        :: Arbitrary a => Int -> Gen [a]
+
+  rand          :: Gen StdGen
+  promote       :: (a -> Gen b) -> Gen (a -> b)
+  variant       :: Int -> Gen a -> Gen a
+
+  generate     :: Int -> StdGen -> Gen a -> a
+
+  = arbitrary.rb
+  Arbitrary(..) -- :: class
+  class Arbitrary a where
+    arbitrary   :: Gen a
+    coarbitrary :: a -> Gen b -> Gen b
+
+  = property.rb
+  Property      -- :: *
+  newtype Property
+    = Prop (Gen Result)
+
+  = result.rb
+  Result(..)	 -- :: data
+  data Result
+    = Result { ok :: Maybe Bool, 
+               stamp :: [String], 
+               arguments :: [String] } 
+
+2.2.1 testable.rb
+
+  -- testable
+  Testable(..)  -- :: class
+  class Testable a where
+    property :: a -> Property
+  type class Testable is translated into a module Testable.
+
+  Haskell
+  quickCheck    :: Testable a => a -> IO () -- :: prop -> IO ()
+  verboseCheck  :: Testable a => a -> IO () -- :: prop -> IO ()
+  test          :: Testable a => a -> IO () -- :: prop -> IO ()
+  check         :: Testable a => Config -> a -> IO () 
+                   -- :: Config -> prop -> IO ()
+  --->
+  Ruby
+  Testable#quick_check   :: [nil, [TrueClass, FalseClass]]
+  Testable#verbose_check :: [nil, [TrueClass, FalseClass]]
+  Testable#test          :: [nil, [TrueClass, FalseClass]]
+  Testable#check         :: [Config, [TrueClass, FalseClass]]
+
+  For using checking functions with unit testing framework, they
+  should return the result as a boolean value.
+
+  Haskell
+  (==>)         :: Testable a => Bool -> a -> Property
+                -- :: Bool -> prop -> prop
+  --->
+  Ruby
+  Testable#imply         :: []
+  method imply takes a block for the boolean property.
+
+  Haskell
+  -- gathering test-case information
+  label         :: Testable a => String -> a -> Property
+                -- :: String         -> prop -> prop
+  collect       :: (Show a, Testable b) => a -> b -> Property
+                -- :: Show a => a    -> prop -> prop
+  classify      :: Testable a => Bool -> String -> a -> Property
+                -- :: Bool -> String -> prop -> prop
+  trivial       :: Testable a => Bool -> a -> Property
+                -- :: Bool           -> prop -> prop
+  --->
+  Ruby
+  Testable#label          :: [Object, Property]
+    alias Testable#collect        
+  Testable#classify       :: [Object, Property] # Object -> String
+  Testable#trivial        :: [nil,    Property]
+
+  In ruby, label and collect can be regarded as same with 'to_s'.
+  classify and trivial take a block for boolean condition.
+  classify calls label internally.
+
+  Haskell
+  evaluate     :: Testable a => a -> Gen Result
+    where property :: Testable a => a -> Property
+          Property = Prop (Gen Result)
+  --->
+  Ruby
+    nop
+  Because the name evaluate is similar to eval in Ruby, I decide to
+  not implement evaluate. evaluate is almost same to property.
+
+2.2.2 config.rb
+
+  Haskell
+  Config(..)    -- :: *
+  data Config = Config
+    { configMaxTest :: Int
+    , configMaxFail :: Int
+    , configSize    :: Int -> Int
+    , configEvery   :: Int -> [String] -> String
+    }
+  defaultConfig :: Config
+  --->
+  Ruby
+  class Config
+  Config#initialize :: [[Integer, Integer, Proc, Proc], ...]
+  
+  There is two ways to implement a method with functions.
+  Because the initialize takes two functions, I choose to implement
+  them as Proc objects and as not block (it is confused to use both
+  Proc and block)
+
+2.2.3 gen.rb
+
+gen.rb is not a small file to implement almost all of features in
+QuickCheck.
+
+  Haskell
+  -- generator combinators
+  Gen           -- :: * -> * ; Functor, Monad
+  newtype Gen a
+    = Gen (Int -> StdGen -> a)
+  ---> 
+  Ruby
+  class Gen
+  Gen#initialize [nil, ...]
+  initialize takes a block {|n, r|  } where n is an integer and r is a
+  random generator.
+
+  Haskell
+  -- property combinators
+  forAll        :: (Show a, Testable b) => Gen a -> (a -> b) ->
+                   Property
+                -- :: Gen a -> (a -> prop) -> prop
+  --->
+  Ruby
+  Gen#forall    :: [nil, Property]
+    forall takes a block.
+
+  Haskell
+  elements      :: [a] -> Gen a
+  --->
+  Ruby
+  Gen.elements  :: [[Object], Gen]
+  
+  Haskell
+  two           :: Gen a -> Gen (a,a)
+  three         :: Gen a -> Gen (a,a,a)
+  four          :: Gen a -> Gen (a,a,a,a)
+  --->
+  Ruby
+    nop
+  Because Ruby does not have tuple (but has Array). I wonder whether
+  the monadic functions two, three and four in Ruby. So I deferred to
+  implement them until I need them.
+
+  Haskell
+  sized         :: (Int -> Gen a) -> Gen a
+  resize        :: Int -> Gen a -> Gen a
+  choose        :: Random a => (a, a) -> Gen a
+  oneof         :: [Gen a] -> Gen a
+  frequency     :: [(Int, Gen a)] -> Gen a
+  vector        :: Arbitrary a => Int -> Gen [a]
+  rand          :: Gen StdGen
+  promote       :: (a -> Gen b) -> Gen (a -> b)
+  variant       :: Int -> Gen a -> Gen a
+  generate      :: Int -> StdGen -> Gen a -> a
+  --->
+  Ruby
+  Gen#sized     :: [nil, Gen], takes a block
+  Gen#resize    :: [Integer, Gen]
+
+  Gen.choose    :: [[lo::?, hi::?],  Gen]
+                    where lo and hi belongs Random
+  Gen.oneof     :: [[Gen], Gen]
+  Gen.frequency :: [[Integer, Gen], Gen]
+  Gen.vector    :: [Integer, Gen]
+  Gen.rand      :: [nil, Gen]
+  Gen.promote   :: [nil, Gen], takes a block
+
+  Gen#variant   :: [Integer, Gen]
+  Gen#generate  :: [[Integer, StdGen], ?]
+
+2.2.3 arbitrary.rb
+
+  Haskell
+  Arbitrary(..) -- :: class
+  class Arbitrary a where
+    arbitrary   :: Gen a
+    coarbitrary :: a -> Gen b -> Gen b
+  --->
+  Ruby
+  module Arbitrary
+  module Coarbitrary
+
+  Because arbitrary should be implemented as a class method, while
+  coarbitrary as a instance method, they are included in different
+  modules. 
+
+2.2.4 property.rb
+   
+  Haskell
+  Property      -- :: *
+  newtype Property
+    = Prop (Gen Result)
+  --->
+  Ruby 
+  class Property
+
+  There are several ways to implement Property in Ruby:
+    - as a class independently <-- I choose
+    - as a subclass of Gen
+
+  At first implementation (experimentally), I tried to write Property
+  as a subclass of Gen. However, initialization is different and debug
+  is imprecated. 
+
+2.2.5 result.rb
+
+  Haskell
+  Result(..)	 -- :: data
+  data Result
+    = Result { ok :: Maybe Bool, 
+               stamp :: [String], 
+               arguments :: [String] } 
+  --->
+  Ruby
+  class Result
+  attr_reader :ok, :stamp, :arguments
+
+3. Test.QuickCheck.Batch
+
+  -- | Run the test.
+  run      :: Testable a => a -> TestOptions -> IO TestResult
+  -- | Prints a one line summary of various tests with common theme
+  runTests :: String -> TestOptions -> [TestOptions -> IO TestResult] -> IO ()
+  defOpt   :: TestOptions
+  data TestOptions = TestOptions {
+    no_of_tests     :: Int,	-- ^ number of tests to run.
+    length_of_tests :: Int,	-- ^ time limit for test, in seconds.
+    debug_tests     :: Bool }
+  data TestResult = TestOk 	String  Int [[String]]
+	| TestExausted 	String  Int [[String]]
+	| TestFailed   [String] Int
+	| TestAborted   Exception
+  isBottom		-- :: a -> Bool
+  bottom		-- :: a 		{- _|_ -}
+
+  private functions
+  tests :: Config -> Gen Result -> StdGen -> Int -> Int -> [[String]]
+           -> IO TestResult
+
+3.1 porting policy for QuickCheck.Batch in Haskell to Ruby
+
+  = testoptions.rb
+  defOpt   :: TestOptions
+  data TestOptions = TestOptions {
+    no_of_tests     :: Int,	-- ^ number of tests to run.
+    length_of_tests :: Int,	-- ^ time limit for test, in seconds.
+    debug_tests     :: Bool }
+
+  data TestResult = 
+     | TestOk       String  Int [[String]] -- message ntest stamps
+     | TestExausted String  Int [[String]] -- message ntest stamps
+     | TestFailed   [String] Int           -- results ntest
+     | TestAborted  Exception              -- exception
+
+  TestOk       ---> class TestOk
+  TestExausted ---> class TestExausted
+  TestFailed   ---> class TestFailed
+  TestAborted  ---> raise
+
+  = testable.rb
+  run      :: Testable a => a -> TestOptions -> IO TestResult
+  runTests :: String -> TestOptions -> [TestOptions -> IO TestResult] -> IO ()
+
+  isBottom and bottom have not been implemented in Ruby yet
+
+  = config.rb
+  tests :: Config -> Gen Result -> StdGen -> Int -> Int -> [[String]]
+           -> IO TestResult
+
+3.1.1 testresult.rb
+
+  Haskell
+  data TestResult = 
+     | TestOk       String  Int [[String]] -- message ntest stamps
+     | TestExausted String  Int [[String]] -- message ntest stamps
+     | TestFailed   [String] Int           -- results ntest
+     | TestAborted  Exception              -- exception
+  -->
+  Ruby
+  class TestResult
+    attr_accessor :message, :ntest, :stamps
+  end
+  class TestOk       < TestResult; end;
+  class TestExausted < TestResult; end;
+  class TestFailed;  end;
+  exception is raised in runtime
+
+3.1.2 testoptions.rb
+
+  Haskell
+  defOpt   :: TestOptions
+  data TestOptions = TestOptions {
+    no_of_tests     :: Int,	-- ^ number of tests to run.
+    length_of_tests :: Int,	-- ^ time limit for test, in seconds.
+    debug_tests     :: Bool }
+  --->
+  Ruby
+  class TestOptions
+  TestOptions#initialize(ntests, len, debug=nil)
+
+  defOpt can be implemented as the default varues of initialize
+
+3.1.3 testable.rb
+
+  Haskell
+  run      :: Testable a => a -> TestOptions -> IO TestResult
+  runTests :: String -> TestOptions -> [TestOptions -> IO TestResult] -> IO ()
+  --->
+  Ruby
+  Testable#run :: [[TestOptions], Result]
+  Testable#run_tests(mes, opts, tests) 
+    :: [[String, TestOptions. [Proc]], [Bool]]
+   should return results
+
+3.1.4 config.rb
+
+  Haskell
+  tests :: Config -> Gen Result -> StdGen -> Int -> Int -> [[String]]
+           -> IO TestResult
+  --->
+  Ruby
+  RushCheckConfig#batch(n, v)
+  RushCheckConfig#test_batch
