@@ -1,5 +1,5 @@
 = RushCheck library - a random test library for ruby
-  2006 Daisuke IKEGAMI <ikegami@madscientist.jp>
+  2006-2011 Daisuke IKEGAMI <ikegami.da@gmail.com>
   http://rushcheck.rubyforge.org/
 
 RushCheck library is a random test tool/library for ruby where
