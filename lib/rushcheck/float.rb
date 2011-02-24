@@ -18,7 +18,7 @@ class Float
   def self.arbitrary
     RushCheck::Gen.new do |n, r|
       a, b, c = (1..3).map { Integer.arbitrary.value(n, r) }
-      a + (b / (c.abs + 1))
+      a.to_f + (b.to_f / (c.abs.to_f + 1.0))
     end
   end
 
