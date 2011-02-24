@@ -1,3 +1,5 @@
+# = bool.rb
+#
 # This file extends the default Ruby's class TrueClass and FalseClass
 # for RushCheck.
 
