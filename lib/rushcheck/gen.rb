@@ -1,4 +1,5 @@
-# = Gen.rb
+# = gen.rb
+#
 # This file is implemented the type class Gen in Haskell's QuickCheck.
 # Almost all implementations are similar to Haskell's one.
 # Therefore check also the Haskell implementation.
