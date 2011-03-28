@@ -1,8 +1,0 @@
-# = version.rb
-# Don't edit version.rb but touch version.rb.in
-
-module RushCheck
-
-  VERSION = "@VERSION@"
-
-end

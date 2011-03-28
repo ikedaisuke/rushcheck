@@ -1,5 +1,6 @@
 # = guard.rb
 # This provides module functions guard and its friends
+#
 
 module RushCheck
 

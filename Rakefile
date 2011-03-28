@@ -1,61 +1,55 @@
-# Rakefile for RushCheck
-# Do NOT edit Rakefile but edit Rakefile.in!
-#
-
 require 'rubygems'
+require 'bundler'
+require './lib/rushcheck/version.rb'
+begin
+  Bundler.setup(:default, :development)
+rescue Bundler::BundlerError => e
+  $stderr.puts e.message
+  $stderr.puts "Run `bundle install` to install missing gems"
+  exit e.status_code
+end
 require 'rake'
-require 'rake/gempackagetask'
 
-RUSHCHECK_VERSION="0.8"
-task :default => ["dist", "gem"]
+require 'jeweler'
+Jeweler::Tasks.new do |gem|
+  # gem is a Gem::Specification... see http://docs.rubygems.org/read/chapter/20 for more options
+  gem.name = "rushcheck"
+  gem.homepage = "http://github.com/IKEGAMIDaisuke/rushcheck"
+  gem.license = "MIT"
+  gem.summary = "Random testing framework for Ruby"
+  gem.description = "Specification based random testing framework like QuickCheck in Haskell"
+  gem.email = "ikegami.da@gmail.com"
+  gem.authors = ["Daisuke IKEGAMI"]
+  gem.version = RushCheck::Version::STRING
+  # Include your dependencies below. Runtime dependencies are required when using your gem,
+  # and development dependencies are only needed for development (ie running rake tasks, tests, etc)
+  #  gem.add_runtime_dependency 'jabber4r', '> 0.1'
+  #  gem.add_development_dependency 'rspec', '> 1.2.3'
+end
+Jeweler::RubygemsDotOrgTasks.new
 
-task :dist do
-  system "darcs push -a"
-  system "darcs dist -d rushcheck-#{RUSHCHECK_VERSION}"
-  system "mv rushcheck-#{RUSHCHECK_VERSION}.tar.gz pkg/"
+require 'rake/testtask'
+Rake::TestTask.new(:test) do |test|
+  test.libs << 'lib' << 'test'
+  test.pattern = 'test/**/test_*.rb'
+  test.verbose = true
 end
 
-spec = Gem::Specification.new do |s|
-  s.name      = 'rushcheck'
-  s.summary   = "A lightweight random testing tool"
-  s.version   = RUSHCHECK_VERSION
-  s.author    = 'Daisuke IKEGAMI'
-  s.email     = 'ikegami@madscientist.jp'
-  s.homepage  = 'http://rushcheck.rubyforge.org'
-  s.platform  = Gem::Platform::RUBY
-  
-  s.has_rdoc  = true
-  # s.test_file = 
-
-  s.require_path = 'lib'
-  s.autorequire  = 'rushcheck'
-  s.bindir       = 'bin'
-  # s.executable = 
-  # s.extra_rdoc_files = 
-  s.files = FileList['lib/**/*', 'data/**/**/**/*', 
-                     '[A-Z]*', 'copying.txt'].to_a
-  s.description = <<-EOF
-    RushCheck is a random testing tool which is one of implementations
-    of QuichCheck in Haskell.
-  EOF
+require 'rcov/rcovtask'
+Rcov::RcovTask.new do |test|
+  test.libs << 'test'
+  test.pattern = 'test/**/test_*.rb'
+  test.verbose = true
 end
 
-Rake::GemPackageTask.new(spec) do |pkg|
-  pkg.need_zip = true
-  pkg.need_tar = true
-end
+task :default => :test
 
-task :rdoc do
-  Dir.chdir('./lib') do
-    system ['rdoc', '-o', '../data/rushcheck/rdoc'].join(' ')
-  end
-end
+require 'rake/rdoctask'
+Rake::RDocTask.new do |rdoc|
+  version = File.exist?('VERSION') ? File.read('VERSION') : ""
 
-task :test_all => Dir.glob("test/spec_*.rb") do |t|
-  Dir.chdir('./test') do
-    specs = t.prerequisites.map {|f| File.basename f}
-    specs.each do |spec|
-    raise RuntimeError, "a test is failed" unless system ['spec', spec, '-f', 's', '-c', '-b'].join(' ')
-    end
-  end
+  rdoc.rdoc_dir = 'rdoc'
+  rdoc.title = "rushcheck #{version}"
+  rdoc.rdoc_files.include('README*')
+  rdoc.rdoc_files.include('lib/**/*.rb')
 end

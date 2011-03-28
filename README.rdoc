@@ -1,0 +1,32 @@
+= RushCheck library - a random test library for ruby
+
+RushCheck library is a random testing library/tools for ruby
+which are imported from QuickCheck library in Haskell.
+
+QuickCheck has been developed by Koen Claessen and John Hughes in 2000.
+  http://www.cs.chalmers.se/~rjmh/QuickCheck/
+  http://hackage.haskell.org/package/QuickCheck
+
+Check out directories both data/rushcheck/doc and rdoc for details.
+
+== Contributing to rushcheck
+ 
+* Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet
+* Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it
+* Fork the project
+* Start a feature/bugfix branch
+* Commit and push until you are happy with your contribution
+* Make sure to add tests for it. This is important so I don't break it in a future version unintentionally.
+* Please try not to mess with the Rakefile, version, or history. If you want to have your own version, or is otherwise necessary, that is fine, but please isolate to its own commit so I can cherry-pick around it.
+
+== Copyright
+
+Copyright (c) 2006-2011 Daisuke IKEGAMI. See LICENSE.txt for
+further details.
+
+Project webpage
+http://rushcheck.rubyforge.org/
+
+Git repository
+http://github.com/IKEGAMIDaisuke/rushcheck/
+
