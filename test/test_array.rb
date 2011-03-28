@@ -1,5 +1,5 @@
 require 'test/unit'
-require 'rushcheck/rushcheck'
+require 'rushcheck'
 
 class TC_RandomArray < Test::Unit::TestCase
 
