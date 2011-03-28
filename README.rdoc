@@ -28,5 +28,5 @@ Project webpage
 http://rushcheck.rubyforge.org/
 
 Git repository
-http://github.com/IKEGAMIDaisuke/rushcheck/
+http://github.com/IKEGAMIDaisuke/rushcheck
 
