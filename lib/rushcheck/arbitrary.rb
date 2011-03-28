@@ -47,7 +47,7 @@ module RushCheck
     # as a instance method, and return a Gen object with the same
     # class of self. 
     def arbitrary
-      raise(NotImplementedError, _message_should_be_overrided)
+      raise(NameError, _message_should_be_overrided)
     end
 
   end
@@ -58,7 +58,7 @@ module RushCheck
     # as a class method which takes one argument of Gen 
     # and return a Gen object. 
     def coarbitrary(g)
-      raise(NotImplementedError, _message_should_be_overrided)
+      raise(NameError, _message_should_be_overrided)
     end
 
   end

@@ -3,7 +3,7 @@ require 'rushcheck/arbitrary'
 
 class TC_Arbitrary < Test::Unit::TestCase
 
-  include RushCheck::Arbitrary
+  extend RushCheck::Arbitrary
 
   def setup
   end
@@ -12,7 +12,7 @@ class TC_Arbitrary < Test::Unit::TestCase
   end
 
   def test_arbitrary
-    assert_raise(NotImplementedError) { arbitrary }
+    assert_raise(NameError) { arbitrary }
   end
 
 end
@@ -28,7 +28,7 @@ class TC_Coarbitrary < Test::Unit::TestCase
   end
 
   def test_coarbitrary
-    assert_raise(NotImplementedError) { coarbitrary(nil) }
+    assert_raise(NameError) { coarbitrary(nil) }
   end
 
 end
