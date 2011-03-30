@@ -32,26 +32,23 @@
 
 module RushCheck
 
-  module ParseError
-
-    # :nodoc:
-    def _message_should_be_overrided
-      /^.+?:\d+(?::in (`.*'))?/ =~ caller.first
-      [ "The method", $1, "should be overrided at", 
-        self.class.to_s ].join(" ") + "."
-    end
-
-    private :_message_should_be_overrided
-
+  # :nodoc:
+  def _message_should_be_overrided
+    /^.+?:\d+(?::in (`.*'))?/ =~ caller.first
+    [ "The method", $1, "should be overrided at", 
+      self.class.to_s ].join(" ") + "."
   end
+
+  private :_message_should_be_overrided
 
   module Arbitrary
 
-    include RushCheck::ParseError
+    include RushCheck
 
-    # It is assumed that the _arbitrary_ method must be overrided
-    # as a instance method, and return a Gen object with the same
-    # class of self. 
+    # A generator for values of the object.
+    # It is an instance-specific method. The method must be 
+    # overrided as a instance method, and return a Gen object 
+    # with the same class of self. 
     def arbitrary
       raise(NotImplementedError, _message_should_be_overrided)
     end
@@ -60,11 +57,11 @@ module RushCheck
 
   module Coarbitrary
     
-    include RushCheck::ParseError
+    include RushCheck
 
-    # It is assumed that the _coarbitrary_ method must be overrided
-    # as a class method which takes one argument of Gen 
-    # and return a Gen object. 
+    # Used to generate a function of self to other.
+    # The method must be overrided as a class method which 
+    # takes one argument of Gen and return a Gen object. 
     def coarbitrary(g)
       raise(NotImplementedError, _message_should_be_overrided)
     end
