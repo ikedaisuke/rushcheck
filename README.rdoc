@@ -44,7 +44,7 @@ Here is a session with irb: (not installed, but downloaded the source code from 
     % irb -I lib -I data/examples -r sample
     irb(main):001:0> assert_sort_one
     OK, passed 100 tests.
-    true
+    ==> true
     irb(main):002:0>
 
 The above test passed as expected. Another example when we will meet a bug in the code.
