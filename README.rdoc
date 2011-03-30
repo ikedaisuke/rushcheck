@@ -38,7 +38,7 @@ The first example is here:
       }.check
     end
 
-We will check that for all integer _x_, the array _[x]_ does not changed after it is sorted.
+We will check that for all integer x, the array [x] does not changed after it is sorted.
 Here is a session with irb: (not installed, but downloaded the source code from the repository)
 
     % irb -I lib -I data/examples -r sample
@@ -68,7 +68,7 @@ Continue the irb session:
     irb(main):003:0>
 
 What we have studied from the above two examples:
-The method _RushCheck::Assertion.new_ takes classes as variables, and has a block 
+The method RushCheck::Assertion.new takes classes as variables, and has a block 
 with the binded variables respectively; The block should return _true_ or _false_; 
 Finally the method _check_ executes the random testing and shows the result.
 
@@ -78,7 +78,7 @@ Copyright (c) 2006-2011 Daisuke IKEGAMI. See LICENSE.txt for
 further details.
 
 Project webpage
-http://rushcheck.rubyforge.org/
+http://rushcheck.rubyforge.org
 
 Git repository
 http://github.com/IKEGAMIDaisuke/rushcheck
