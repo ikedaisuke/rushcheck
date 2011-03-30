@@ -68,8 +68,8 @@ Continue the irb session:
     irb(main):003:0>
 
 When x <= y in the test, the sorted array [x, y].sort equals the original array [x, y].
-However, if x > y then the sorted array differs the original. We see the counter example
-[2, 0] thanks to random testing.
+However, if x > y then the sorted array differs the original.
+We see the counter example [2, 0] thanks to random testing.
 
 What we have studied from the above two examples:
 The method RushCheck::Assertion.new takes classes as variables, and has a block 
