@@ -9,34 +9,47 @@ require 'rushcheck/testable'
 
 module RushCheck
 
+  class RushCheckError < StandardError; end
+
   # Assertion class is one of main features of RushCheck.
   # You can write a testcase for random testing as follows:
   # 
-  # Assertion.new(Integer, String) do |x, y|
-  #   RushCheck::guard { precondition }
-  #   body
-  # end
+  #   RushCheck::Assertion.new(Integer, String) do |n, s|
+  #     RushCheck::guard { precondition }
+  #     body
+  #   end.check
   #
-  # The return value of the body of testcase is checked by
-  # the method 'check'. 
+  # The return value of the body of testcase should be 
+  # true or false and checked by the method 'check'. 
   #
   # Note that the number of arguments in the block must be
   # equal to the number of arguments of Assertion.new.
-  # However, for a curried block, we can write also
-  #   Assertion.new(*cs) {|*xs| ...}
+  # Otherwise an exception is raised.
   #
-  # See also class Claim, which is a subclass of Assertion
-  # See also the RushCheck tutorial and several examples.
-  #
+  # See also class Claim, which is a subclass of Assertion,
+  # the tutorial and several examples.
+
   class Assertion
-    
+
     include RushCheck::Testable
 
-    attr_reader :proc
+    # The body in the test as a block
+    attr_reader :body
 
     def initialize(*xs, &f)
+
+      err_n = [ "Incorrect number of variables:",
+                "( #{xs.length} for #{f.arity} )" ].join(' ')
+      raise(RushCheckError, err_n) unless xs.length == f.arity
+
+      xs.each do |x|
+        err_c = ["Illegal variable which is not Class:",
+                 x.inspect].join(' ')
+        raise(RushCheckError, err_c) unless x.class === Class
+      end
+
       @inputs = xs[0..(f.arity - 1)]
-      @proc = f
+      @body = f
     end
 
     def _property
@@ -55,7 +68,7 @@ module RushCheck
         end
       end.bind do |args|
         test = begin
-                 @proc.call(*args) # not yield here!
+                 @body.call(*args) # not yield here!
                rescue Exception => ex
                  case ex
                  when RushCheck::GuardException
@@ -80,7 +93,7 @@ module RushCheck
 
     def property
       _property { |args|
-        if @proc.call(*args)
+        if @body.call(*args)
         then RushCheck::Result.new(true)
         else RushCheck::Result.new(false)
         end

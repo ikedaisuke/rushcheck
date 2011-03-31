@@ -1,5 +1,5 @@
 require 'test/unit'
-require 'rushcheck'
+require 'rushcheck/assertion'
 
 class TC_Assertion < Test::Unit::TestCase
 
@@ -10,8 +10,33 @@ class TC_Assertion < Test::Unit::TestCase
   end
 
   def test_assertion_failed
-    # a = Assertion.new { nil }
-    
+    assert_raise(RushCheck::RushCheckError) {
+      RushCheck::Assertion.new { false }
+    }
+  end
+
+  def test_assertion_failed_not_class
+    assert_raise(RushCheck::RushCheckError) {
+      RushCheck::Assertion.new(0) { |x| false }
+    }
+  end
+
+  def test_assertion_failed_invalid_vars
+    assert_raise(RushCheck::RushCheckError) {
+      RushCheck::Assertion.new(Integer) { 
+        |x, y| 
+        false 
+      }
+    }
+  end
+
+  def test_assertion_nothing_raised
+    assert_nothing_raised {
+      RushCheck::Assertion.new(Integer, String) { 
+        |x, y| 
+        false 
+      }
+    }
   end
 
 end
