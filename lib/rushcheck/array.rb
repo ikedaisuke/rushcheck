@@ -2,6 +2,7 @@
 # The file provides a random generator of arrays.
 
 require 'rushcheck/arbitrary'
+require 'rushcheck/error'
 require 'rushcheck/gen'
 require 'rushcheck/testable'
 
@@ -14,13 +15,13 @@ class RandomArray < Array
   include RushCheck::Coarbitrary
 
   # self.set_pattern must be executed before calling self.arbitrary.
-  # self.set_pattern defines pattern of random arrays for self.arbitrary.
-  # self.set_pattern takes a variable and a block, where the variable
-  # should be a class which is used for the first element of random array.
-  # On the other hand,
-  # the block should define random array by inductive way; the block
-  # takes two variables and the first variable is assumed as an array
-  # and the second variable is the index of array.
+  # The method defines pattern of random arrays for self.arbitrary.
+  # This takes a variable and a block, where the variable should be
+  # a class which is used for the first element of random array.
+  # On the other hand, the block should define random array by
+  # inductive way; the block takes two variables and the first
+  # variable is assumed as an array and the second variable is the
+  # index of array.
   def self.set_pattern(base, &f)
     @@base, @@indp = base, f
     nil
@@ -33,20 +34,27 @@ class RandomArray < Array
     when Array
       cs.map {|c| self.create_components(c, n, r)}
     else
-      raise RuntimeError, "Unexpected arguments #{cs.inspect}. Maybe forgotten calling set_pattern before?"
+      err = [ "Unexpected arguments #{cs.inspect}.",
+              "Maybe forgotten calling set_pattern before?"
+            ].join(' ')
+      raise(RushCheck::InternalError::RushCheckError, err)
     end
   end
 
+  def self.generate_components(c, n, r)
+    c.arbitrary.generate(n, r)
+  end
+
   # a private method for self.arbitrary
-  def self.create_array(len)
+  def self.generate_array(len)
     RushCheck::Gen.new do |n, r|
-      ary = [self.create_components(@@base, n, r)]
+      ary = [self.generate_components(@@base, n, r)]
       r2 = r
       (1..len).each do |i|
         r1, r2 = r2.split
-        ary << self.create_components(@@indp.call(ary, i), n, r1)
+        ary << self.generate_components(@@indp.call(i), n, r1)
       end
-      
+
       ary
     end
   end
@@ -60,12 +68,12 @@ class RandomArray < Array
       end
     end
   end
-  
+
   def self.arbitrary
     self.arrange_len do |len|
       if len == 0
       then RushCheck::Gen.unit([])
-      else self.create_array(len)
+      else self.generate_array(len)
       end
     end
   end
@@ -84,7 +92,7 @@ class NonEmptyRandomArray < RandomArray
 
   def self.arbitrary
     self.arrange_len do |len|
-      self.create_array(len + 1)
+      self.generate_array(len + 1)
     end
   end
 
