@@ -2,14 +2,14 @@
 #
 # This file consists of two modules +Arbitrary+ and +Coarbitrary+.
 # They are abstract modules.
-# +Arbitrary+ provides an instance method _arbitrary_. 
+# +Arbitrary+ provides an instance method _arbitrary_.
 # On the other hand, +Coarbitrary+ provides a class method
 # _coarbitrary_. They are abstract methods and should be overrided in
 # each class after *extend/include* them. See the following example.
 #
 # == Example how to use
 #
-# You have to define the overrided methods both _arbitrary_ and 
+# You have to define the overrided methods both _arbitrary_ and
 # _coarbitrary_ at +YourClass+ to generate random test instances.
 #
 # See also the manual how to build a random generator.
@@ -21,7 +21,7 @@
 #     include RushCheck::Coarbitrary
 #
 #     def self.arbitrary
-#       # must be overrided   
+#       # must be overrided
 #     end
 #
 #     def coarbitrary
@@ -35,7 +35,7 @@ module RushCheck
   # :nodoc:
   def _message_should_be_overrided
     /^.+?:\d+(?::in (`.*'))?/ =~ caller.first
-    [ "The method", $1, "should be overrided at", 
+    [ "The method", $1, "should be overrided at",
       self.class.to_s ].join(" ") + "."
   end
 
@@ -46,9 +46,9 @@ module RushCheck
     include RushCheck
 
     # A generator for values of the object.
-    # It is an instance-specific method. The method must be 
-    # overrided as a instance method, and return a Gen object 
-    # with the same class of self. 
+    # It is an instance-specific method. The method must be
+    # overrided as a instance method, and return a Gen object
+    # with the same class of self.
     def arbitrary
       raise(NotImplementedError, _message_should_be_overrided)
     end
@@ -56,12 +56,12 @@ module RushCheck
   end
 
   module Coarbitrary
-    
+
     include RushCheck
 
     # Used to generate a function of self to other.
-    # The method must be overrided as a class method which 
-    # takes one argument of Gen and return a Gen object. 
+    # The method must be overrided as a class method which
+    # takes one argument of Gen and return a Gen object.
     def coarbitrary(g)
       raise(NotImplementedError, _message_should_be_overrided)
     end
