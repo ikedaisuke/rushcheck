@@ -40,7 +40,11 @@ module RushCheck
 
       err_n = [ "Incorrect number of variables:",
                 "( #{xs.length} for #{f.arity} )" ].join(' ')
-      raise(RushCheckError, err_n) unless xs.length == f.arity
+      if f.arity == -1
+        raise(RushCheckError, err_n) unless xs.empty?
+      elsif ! (xs.length == f.arity)
+        raise(RushCheckError, err_n)
+      end
 
       xs.each do |x|
         err_c = ["Illegal variable which is not Class:",

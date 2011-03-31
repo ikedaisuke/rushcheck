@@ -9,12 +9,6 @@ class TC_Assertion < Test::Unit::TestCase
   def teardown
   end
 
-  def test_assertion_failed
-    assert_raise(RushCheck::RushCheckError) {
-      RushCheck::Assertion.new { false }
-    }
-  end
-
   def test_assertion_failed_not_class
     assert_raise(RushCheck::RushCheckError) {
       RushCheck::Assertion.new(0) { |x| false }
@@ -27,6 +21,12 @@ class TC_Assertion < Test::Unit::TestCase
         |x, y| 
         false 
       }
+    }
+  end
+
+  def test_assertion_nothing_raised_trivial
+    assert_nothing_raised(RushCheck::RushCheckError) {
+      RushCheck::Assertion.new { false }
     }
   end
 
