@@ -25,8 +25,7 @@ module RushCheck
   # equal to the number of arguments of Assertion.new.
   # Otherwise an exception is raised.
   #
-  # See also class Claim, which is a subclass of Assertion,
-  # the tutorial and several examples.
+  # See also the tutorial and several examples.
 
   class Assertion
 
@@ -36,6 +35,9 @@ module RushCheck
     # The body in the test as a block
     attr_reader :body
 
+    # Create a random test code. The argument _xs_ should be
+    # classes. The block _f_ takes variables as same as the
+    # number of _xs_. This should be return true or false.
     def initialize(*xs, &f)
 
       err_n = [ "Incorrect number of variables:",
@@ -56,9 +58,7 @@ module RushCheck
       @body = f
     end
 
-    def _property
-      # :nodoc:
-      # should be raise when the number of arguments are differ?
+    def property #:nodoc:
       g = RushCheck::Gen.new do |n, r|
         r2 = r
         if @inputs
@@ -72,7 +72,7 @@ module RushCheck
         end
       end.bind do |args|
         test = begin
-                 @body.call(*args) # not yield here!
+                 @body.call(*args)
                rescue Exception => ex
                  case ex
                  when RushCheck::GuardException
@@ -83,6 +83,11 @@ module RushCheck
                    RushCheck::Result.new(false, [], [err])
                  end
                end
+        unless test == true || test == false
+          err = ["The body of Assertion.new should be",
+                 "true or false, but:", test.inspect].join(' ')
+          raise(RushCheckError, err)
+        end
         # not use ensure here because ensure clause
         # does not return values
         test.property.gen.fmap do |res|
@@ -92,16 +97,6 @@ module RushCheck
       end
 
       RushCheck::Property.new(g)
-    end
-    private :_property
-
-    def property
-      _property { |args|
-        if @body.call(*args)
-        then RushCheck::Result.new(true)
-        else RushCheck::Result.new(false)
-        end
-        }
     end
 
   end

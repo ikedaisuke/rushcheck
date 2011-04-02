@@ -10,6 +10,12 @@ class TC_Assertion < Test::Unit::TestCase
   def teardown
   end
 
+  def test_assertion_failed
+    assert_raise(RushCheck::InternalError::RushCheckError) {
+      RushCheck::Assertion.new(Integer) {|x| nil}.check
+    }
+  end
+
   def test_assertion_failed_not_class
     assert_raise(RushCheck::InternalError::RushCheckError) {
       RushCheck::Assertion.new(0) { |x| false }
