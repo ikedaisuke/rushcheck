@@ -1,9 +1,9 @@
 # = arbitrary.rb
 #
-# This file consists of two modules +Arbitrary+ and +Coarbitrary+.
+# This file consists of two modules _Arbitrary_ and _Coarbitrary_.
 # They are abstract modules.
-# +Arbitrary+ provides an instance method _arbitrary_.
-# On the other hand, +Coarbitrary+ provides a class method
+# _Arbitrary_ provides an instance method _arbitrary_.
+# On the other hand, _Coarbitrary_ provides a class method
 # _coarbitrary_. They are abstract methods and should be overrided in
 # each class after *extend/include* them. See the following example.
 #
@@ -32,8 +32,7 @@
 
 module RushCheck
 
-  # :nodoc:
-  def _message_should_be_overrided
+  def _message_should_be_overrided # :nodoc:
     /^.+?:\d+(?::in (`.*'))?/ =~ caller.first
     [ "The method", $1, "should be overrided at",
       self.class.to_s ].join(" ") + "."
@@ -62,6 +61,7 @@ module RushCheck
     # Used to generate a function of self to other.
     # The method must be overrided as a class method which
     # takes one argument of Gen and return a Gen object.
+    # You can often use Gen.variant to implement.
     def coarbitrary(g)
       raise(NotImplementedError, _message_should_be_overrided)
     end
