@@ -2,11 +2,6 @@
 
 require 'rushcheck'
 
-# first boring example
-def assert_sort
-  RushCheck::Assertion.new { [].sort == [] }.check
-end
-
 # assert_sort_one should be true
 def assert_sort_one
   RushCheck::Assertion.new(Integer) { |x|
@@ -33,7 +28,7 @@ def assert_sort_two_sorted
   }.check
 end
 
-# watch statistics 
+# watch statistics
 def assert_sort_two_sorted_trivial
   RushCheck::Assertion.new(Integer, Integer) { |x, y|
     RushCheck::guard {x <= y}
@@ -50,3 +45,9 @@ def assert_sort_two_sorted_classify
       classify('bit diff') { (x - y).abs == 1 }
   }.check
 end
+
+# Because Assertion.new has to take at least one variable,
+# the following example should be failed.
+# def assert_sort
+#   RushCheck::Assertion.new { [].sort == [] }.check
+# end
