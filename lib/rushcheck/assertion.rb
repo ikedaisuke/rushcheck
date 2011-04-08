@@ -43,7 +43,7 @@ module RushCheck
       err_n = [ "Incorrect number of variables:",
                 "( #{xs.length} for #{f.arity} )" ].join(' ')
       if f.arity == -1
-        raise(RushCheckError, err_n) unless xs.empty?
+        raise(RushCheckError, err_n) # unless xs.empty?
       elsif xs.length != f.arity
         raise(RushCheckError, err_n)
       end
@@ -72,9 +72,18 @@ module RushCheck
         end
       end.bind do |args|
         test = begin
-                 @body.call(*args)
+                 r = @body.call(*args)
+                 unless r == true || r == false
+                   err = ["The body of Assertion.new should be",
+                          "true or false, but:",
+                          test.inspect].join(' ')
+                   raise(RushCheckError, err)
+                 end
+                 r
                rescue Exception => ex
                  case ex
+                 when RushCheckError
+                   raise ex
                  when RushCheck::GuardException
                    RushCheck::Result.new(nil)
                  else
@@ -83,11 +92,6 @@ module RushCheck
                    RushCheck::Result.new(false, [], [err])
                  end
                end
-        unless test == true || test == false
-          err = ["The body of Assertion.new should be",
-                 "true or false, but:", test.inspect].join(' ')
-          raise(RushCheckError, err)
-        end
         # not use ensure here because ensure clause
         # does not return values
         test.property.gen.fmap do |res|

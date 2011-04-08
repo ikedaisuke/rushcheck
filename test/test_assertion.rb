@@ -10,15 +10,15 @@ class TC_Assertion < Test::Unit::TestCase
   def teardown
   end
 
-  def test_assertion_failed
+  def test_assertion_illegal
     assert_raise(RushCheck::InternalError::RushCheckError) {
-      RushCheck::Assertion.new(Integer) {|x| nil}.check
+      RushCheck::Assertion.new(Integer) { |x| nil }.check
     }
   end
 
   def test_assertion_failed_not_class
     assert_raise(RushCheck::InternalError::RushCheckError) {
-      RushCheck::Assertion.new(0) { |x| false }
+      RushCheck::Assertion.new(0) { |x| true }.check
     }
   end
 
@@ -26,14 +26,14 @@ class TC_Assertion < Test::Unit::TestCase
     assert_raise(RushCheck::InternalError::RushCheckError) {
       RushCheck::Assertion.new(Integer) {
         |x, y|
-        false
-      }
+        true
+      }.check
     }
   end
 
-  def test_assertion_nothing_raised_trivial
-    assert_nothing_raised {
-      RushCheck::Assertion.new { false }
+  def test_assertion_raise_trivial
+    assert_raise(RushCheck::InternalError::RushCheckError) {
+      RushCheck::Assertion.new { true }.check
     }
   end
 
@@ -41,8 +41,18 @@ class TC_Assertion < Test::Unit::TestCase
     assert_nothing_raised {
       RushCheck::Assertion.new(Integer, String) {
         |x, y|
-        false
-      }
+        true
+      }.check
+    }
+  end
+
+  def test_assertion_guard_passed
+    assert_nothing_raised {
+      RushCheck::Assertion.new(Integer) {
+        |x|
+        RushCheck::guard { true }
+        true
+      }.check
     }
   end
 
