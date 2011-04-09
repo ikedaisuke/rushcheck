@@ -85,7 +85,7 @@ returns nil object.
 
   # NG case
   RushCheck::Assertion(Integer) { |x|
-    assertion_equal x*x, x**2 # NG because this returns nil
+    assertion_equal x+x, 2*x # NG because this returns nil
   }.check
   
 On the other hand, the check method in RushCheck returns either true or false if
@@ -95,7 +95,7 @@ like this;
   # OK
   assertion_equal true,
     RushCheck::Assertion(Integer) { |x|
-      x*x == x**2
+      x+x == 2*x
     }.check
 
 == Contributing to rushcheck
