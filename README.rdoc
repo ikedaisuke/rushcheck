@@ -14,16 +14,6 @@ Check out directories both data/rushcheck/doc and rdoc for details.
 Less documents/examples, no gem. There is a gem version 0.8, but,
 it is not recommended to install because we will change the API.
 
-== Contributing to rushcheck
- 
-* Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet
-* Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it
-* Fork the project
-* Start a feature/bugfix branch
-* Commit and push until you are happy with your contribution
-* Make sure to add tests for it. This is important so I don't break it in a future version unintentionally.
-* Please try not to mess with the Rakefile, version, or history. If you want to have your own version, or is otherwise necessary, that is fine, but please isolate to its own commit so I can cherry-pick around it.
-
 == An example
 
 Let's see data/examples/sample.rb
@@ -76,9 +66,51 @@ The method RushCheck::Assertion.new takes classes as variables, and has a block
 with the binded variables respectively; The block should return _true_ or _false_; 
 Finally the method _check_ executes the random testing and shows the result.
 
+== More further
+
+Specification of the program should be provided as properties. In each property,
+we write what has to be satisfied. RushCheck helps to test the properties with
+100 (as the default) tests by random generated test cases. We can change the
+number of tests easily as follows;
+
+  # 1000 tests instead
+  c = RushCheck::Config.new(1000)
+  RushCheck::Assertion(Integer) { |x|
+  ... # the property of the test
+  }.check(c)
+
+The block of the property should be return either _true_ or _false_. Therefore
+the assertion method in Test/Unit should not be written in the block because this
+returns nil object.
+
+  # NG case
+  RushCheck::Assertion(Integer) { |x|
+    assertion_equal x*x, x**2 # NG because this returns nil
+  }.check
+  
+On the other hand, the check method in RushCheck returns either true or false if
+the test does not throw any exception. Then we can combine RushCheck and Test/Unit
+like this;
+
+  # OK
+  assertion_equal true,
+    RushCheck::Assertion(Integer) { |x|
+      x*x == x**2
+    }.check
+
+== Contributing to rushcheck
+ 
+* Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet
+* Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it
+* Fork the project
+* Start a feature/bugfix branch
+* Commit and push until you are happy with your contribution
+* Make sure to add tests for it. This is important so I don't break it in a future version unintentionally.
+* Please try not to mess with the Rakefile, version, or history. If you want to have your own version, or is otherwise necessary, that is fine, but please isolate to its own commit so I can cherry-pick around it.
+
 == Copyright
 
-Copyright (c) 2006-2011 Daisuke IKEGAMI. See LICENSE.txt for
+Copyright (c) 2006-2011 Daisuke IKEGAMI. See LICENSE.txt (The MIT license) for
 further details.
 
 Project webpage
