@@ -37,7 +37,7 @@ Gem::Specification.new do |s|
     "lib/rushcheck/array.rb",
     "lib/rushcheck/assertion.rb",
     "lib/rushcheck/bool.rb",
-    "lib/rushcheck/claim.rb",
+#   "lib/rushcheck/claim.rb",
     "lib/rushcheck/config.rb",
     "lib/rushcheck/float.rb",
     "lib/rushcheck/gen.rb",
