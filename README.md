@@ -25,10 +25,10 @@ Key Issues:
 
 We highly recommend finding an alternative gem for your needs. Here are a few projects with similar functionality that you might consider. Please note that not all of these are actively maintained, so check their status before using them.
 
-- [ruby-prop_check](https://github.com/Qqwy/ruby-prop_check)
-- [rantly](https://github.com/rantly-rb/rantly)
 - [pbt](https://github.com/ohbarye/pbt)
 - [Propr](https://github.com/kputnam/propr)
+- [rantly](https://github.com/rantly-rb/rantly)
+- [ruby-prop_check](https://github.com/Qqwy/ruby-prop_check)
 
 ## Other Languages
 
